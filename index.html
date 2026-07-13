@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Ad Generator Platform</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 40px 20px; margin: 0; }
+        .container { background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: 100%; max-width: 700px; }
+        h1 { color: var(--primary); text-align: center; margin-top: 0; font-size: 28px; }
+        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 15px; transition: border 0.2s; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        
+        /* Output Layout */
+        .results-container { margin-top: 35px; display: none; }
+        .results-title { border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; color: var(--primary); }
+        .output-card { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--primary); position: relative; }
+        .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .output-tag { font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; color: var(--primary); }
+        .copy-btn { width: auto; padding: 6px 12px; font-size: 12px; background: #64748b; border-radius: 4px; }
+        .copy-btn:hover { background: #475569; }
+        .output-text { white-space: pre-wrap; font-size: 14.5px; line-height: 1.6; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ AI Ad Generator</h1>
+        <p class="subtitle">Turn your product details into complete marketing content in seconds.</p>
+        
+        <div class="form-group">
+            <label>Product / Service Name:</label>
+            <input type="text" id="productName" placeholder="e.g. Herbal Skin Cream">
+        </div>
+
+        <div class="form-group">
+            <label>Product Description & Key Features:</label>
+            <textarea id="features" rows="3" placeholder="e.g. Made from natural aloe vera, removes acne, glows skin, organic ingredients"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Target Audience:</label>
+            <input type="text" id="audience" placeholder="e.g. Women aged 18–35">
+        </div>
+
+        <div class="form-group">
+            <label>Goal / Purpose:</label>
+            <input type="text" id="purpose" placeholder="e.g. Sell product, increase brand awareness">
+        </div>
+        
+        <button onclick="generateMarketingPack()" id="submitBtn">Generate Marketing Pack ✨</button>
+        
+        <!-- Generated Outputs -->
+        <div class="results-container" id="resultsSection">
+            <h2 class="results-title">📋 Your Ready-Made Marketing Content</h2>
+            
+            <!-- Instagram Caption -->
+            <div class="output-card">
+                <div class="output-header">
+                    <span class="output-tag">📸 Instagram Caption</span>
+                    <button class="copy-btn" onclick="copyText('instaText')">Copy 📋</button>
+                </div>
+                <p class="output-text" id="instaText"></p>
+            </div>
+
+            <!-- Facebook Ad Copy -->
+            <div class="output-card">
+                <div class="output-header">
+                    <span class="output-tag">📘 Facebook Ad Copy</span>
+                    <button class="copy-btn" onclick="copyText('fbText')">Copy 📋</button>
+                </div>
+                <p class="output-text" id="fbText"></p>
+            </div>
+
+            <!-- WhatsApp Message -->
+            <div class="output-card">
+                <div class="output-header">
+                    <span class="output-tag">💬 WhatsApp Promo Message</span>
+                    <button class="copy-btn" onclick="copyText('waText')">Copy 📋</button>
+                </div>
+                <p class="output-text" id="waText"></p>
+            </div>
+
+            <!-- Short Product Description -->
+            <div class="output-card">
+                <div class="output-header">
+                    <span class="output-tag">📝 Short Product Description</span>
+                    <button class="copy-btn" onclick="copyText('descText')">Copy 📋</button>
+                </div>
+                <p class="output-text" id="descText"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateMarketingPack() {
+            const btn = document.getElementById('submitBtn');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            const productName = document.getElementById('productName').value;
+            const features = document.getElementById('features').value;
+            const audience = document.getElementById('audience').value;
+            const purpose = document.getElementById('purpose').value;
+
+            if(!productName || !features || !audience || !purpose) {
+                alert('Please fill all the input fields to proceed!');
+                return;
+            }
+
+            btn.innerText = "Generating complete marketing pack... ⏳";
+            btn.disabled = true;
+            resultsSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productName, features, audience, purpose })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('instaText').innerText = data.data.instagram;
+                    document.getElementById('fbText').innerText = data.data.facebook;
+                    document.getElementById('waText').innerText = data.data.whatsapp;
+                    document.getElementById('descText').innerText = data.data.description;
+                    
+                    resultsSection.style.display = 'block';
+                    resultsSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Something went wrong. Please try again!');
+            } finally {
+                btn.innerText = "Generate Marketing Pack ✨";
+                btn.disabled = false;
+            }
+        }
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard successfully!');
+        }
+    </script>
+</body>
+</html>
